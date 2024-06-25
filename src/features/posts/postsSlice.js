@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, nanoid } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, createSelector } from "@reduxjs/toolkit";
 import { sub } from 'date-fns';
 import axios from 'axios';
 
@@ -56,25 +56,7 @@ export const postsSlice=createSlice( {
         name: "posts",
         initialState,
         reducers: {
-                addPost: {
-                        reducer: ( state, action ) =>
-                        {
-                                state.posts.push( action.payload );
-                        },
-                        prepare: ( title, description, userId ) =>
-                        {
-                                return {
-                                        payload: {
-                                                id: nanoid(),
-                                                title,
-                                                description,
-                                                date: new Date().toISOString(),
-                                                userId,
-                                                reactions: { thumbsUp: 0, wow: 0, heart: 0, rocket: 0, coffee: 0 }
-                                        }
-                                };
-                        }
-                },
+
                 reactionAdded: ( state, action ) =>
                 {
                         const { postId, reaction }=action.payload;
@@ -83,6 +65,9 @@ export const postsSlice=createSlice( {
                         {
                                 existingPost.reactions[ reaction ]++;
                         }
+                }, incrementCount: ( state, action ) =>
+                {
+                        state.count+=1
                 }
         },
         extraReducers: ( builder ) =>
@@ -152,8 +137,16 @@ export const postsSlice=createSlice( {
 export const selectAllPosts=( state ) => state.posts.posts;
 export const getPostsStatus=( state ) => state.posts.status;
 export const getPostsError=( state ) => state.posts.error;
+export const getCount=( state ) => state.posts.count;
 export const selectPostById=( state, postId ) => state.posts.posts.find( post => post.id===postId ); // Corrected selector
 
-export const { addPost, reactionAdded }=postsSlice.actions;
+
+// only userpage renderd when posts,userId CHnages
+// createSelector Accepts 1 or more Input Funs
+export const selectPostsByUser=( state, user ) => createSelector(
+        [ selectAllPosts, ( state, userId ) => userId ], // returned Output To next funtion
+        ( posts, userId ) => posts.filter( post => post.userId===userId )
+);
+export const { incrementCount, reactionAdded }=postsSlice.actions;
 
 export default postsSlice.reducer;
