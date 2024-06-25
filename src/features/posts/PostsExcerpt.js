@@ -19,5 +19,5 @@ let PostsExcerpt=( { post } ) =>
                 </article>
         )
 }
-
+PostsExcerpt=React.memo( PostsExcerpt );
 export default PostsExcerpt
