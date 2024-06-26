@@ -1,15 +1,24 @@
-import { createSlice, createAsyncThunk, createSelector } from "@reduxjs/toolkit";
+import
+        {
+                createSlice,
+                createAsyncThunk,
+                createSelector,
+                createEntityAdapter
+        } from "@reduxjs/toolkit";
 import { sub } from 'date-fns';
 import axios from 'axios';
 
 const POST_URL="https://jsonplaceholder.typicode.com/posts";
 
-const initialState={
-        posts: [],
+const postsAdapter=createEntityAdapter( {
+        sortComparer: ( a, b ) => b.date.localeCompare( a.date )
+} );
+
+const initialState=postsAdapter.getInitialState( {
         status: 'idle',
         error: null,
         count: 0
-};
+} );
 
 export const fetchPosts=createAsyncThunk( 'posts/fetchPosts', async () =>
 {
@@ -33,17 +42,15 @@ export const updatePost=createAsyncThunk( 'posts/updatePost', async ( initialPos
         } catch ( e )
         {
                 return initialPost;
-                // status 500 
-                // only for testing redux
         }
 } );
+
 export const deletePost=createAsyncThunk( '/posts/delete', async ( initialPost ) =>
 {
         const { id }=initialPost;
         try
         {
                 const response=await axios.delete( `${ POST_URL }/${ id }` );
-                console.log( 'Delete response:', response );
                 if ( response.status===200 ) return { id };
                 return `${ response?.status }: ${ response?.statusText }`;
         } catch ( err )
@@ -51,24 +58,24 @@ export const deletePost=createAsyncThunk( '/posts/delete', async ( initialPost )
                 console.error( 'Error in deletePost thunk:', err );
                 throw err;
         }
-} )
+} );
 
 export const postsSlice=createSlice( {
         name: "posts",
         initialState,
         reducers: {
-
                 reactionAdded: ( state, action ) =>
                 {
                         const { postId, reaction }=action.payload;
-                        const existingPost=state.posts.find( post => post.id===postId );
+                        const existingPost=state.entities[ postId ];
                         if ( existingPost )
                         {
                                 existingPost.reactions[ reaction ]++;
                         }
-                }, incrementCount: ( state, action ) =>
+                },
+                incrementCount: ( state, action ) =>
                 {
-                        state.count+=1
+                        state.count+=1;
                 }
         },
         extraReducers: ( builder ) =>
@@ -90,7 +97,7 @@ export const postsSlice=createSlice( {
                                         };
                                         return post;
                                 } );
-                                state.posts=state.posts.concat( loadedPosts );
+                                postsAdapter.upsertMany( state, loadedPosts );
                         } )
                         .addCase( fetchPosts.rejected, ( state, action ) =>
                         {
@@ -104,7 +111,7 @@ export const postsSlice=createSlice( {
                                 action.payload.reactions={
                                         thumbsUp: 0, wow: 0, heart: 0, rocket: 0, coffee: 0
                                 };
-                                state.posts.push( action.payload );
+                                postsAdapter.addOne( state, action.payload );
                         } )
                         .addCase( updatePost.fulfilled, ( state, action ) =>
                         {
@@ -114,41 +121,38 @@ export const postsSlice=createSlice( {
                                         console.log( action.payload );
                                         return;
                                 }
-                                const { id }=action.payload;
                                 action.payload.date=new Date().toISOString();
-                                const posts=state.posts.filter( post => post.id!==id );
-                                state.posts=[ ...posts, action.payload ];
+                                postsAdapter.upsertOne( state, action.payload );
                         } )
                         .addCase( deletePost.fulfilled, ( state, action ) =>
                         {
-                                console.log( 'Delete action payload:', action.payload );
                                 if ( !action.payload?.id )
                                 {
-                                        console.log( "Post Not Deleted " );
+                                        console.log( "Post Not Deleted" );
                                         console.log( action.payload );
                                         return;
                                 }
                                 const { id }=action.payload;
-                                state.posts=state.posts.filter( post => post.id!==id );
-                                console.log( 'Posts after deletion:', state.posts );
-                        } )
+                                postsAdapter.removeOne( state, id );
+                        } );
         }
 } );
 
-export const selectAllPosts=( state ) => state.posts.posts;
 export const getPostsStatus=( state ) => state.posts.status;
 export const getPostsError=( state ) => state.posts.error;
 export const getCount=( state ) => state.posts.count;
-export const selectPostById=( state, postId ) => state.posts.posts.find( post => post.id===postId ); // Corrected selector
 
-
-// only userpage renderd when posts,userId CHnages
-// createSelector Accepts 1 or more Input Funs
+export const {
+        selectAll: selectAllPosts,
+        selectById: selectPostById,
+        selectIds: selectPostIds
+}=postsAdapter.getSelectors( state => state.posts );
 
 export const selectPostsByUser=( userId ) => createSelector(
         [ selectAllPosts ],
         ( posts ) => posts.filter( post => post.userId===userId )
 );
+
 export const { incrementCount, reactionAdded }=postsSlice.actions;
 
 export default postsSlice.reducer;

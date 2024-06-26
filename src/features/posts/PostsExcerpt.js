@@ -3,10 +3,18 @@ import PostAuthor from './PostAuthor';
 import TimeAgo from './TimeAgo';
 import ReactionButtons from './ReactionButtons';
 import { Link } from 'react-router-dom';
-import '../../index.css';
+import { useSelector } from 'react-redux';
+import { selectPostById } from './postsSlice'
 
-let PostsExcerpt=( { post } ) =>
+let PostsExcerpt=( { postId } ) =>
 {
+        const post=useSelector( state => selectPostById( state, postId ) );
+
+        if ( !post )
+        {
+                return null; // Or a loading placeholder
+        }
+
         return (
                 <article key={ post.id } className='bg-slate-300 m-4 rounded-2xl p-4 text-slate-800'>
                         <h3 className='font-bold text-2xl text-slate-500'>{ post.title }</h3>

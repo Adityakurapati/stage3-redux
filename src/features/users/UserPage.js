@@ -7,6 +7,8 @@ const UserPage=() =>
 {
         const { userId }=useParams();
         const user=useSelector( state => selectUserById( state, Number( userId ) ) );
+
+        //Below Code Will Fix Users Repeated Rerendering Issue
         const postsForUser=useSelector( selectPostsByUser( Number( userId ) ) ); // Use the selector correctly
 
 
