@@ -8,6 +8,7 @@ const initialState={
         posts: [],
         status: 'idle',
         error: null,
+        count: 0
 };
 
 export const fetchPosts=createAsyncThunk( 'posts/fetchPosts', async () =>
@@ -143,9 +144,10 @@ export const selectPostById=( state, postId ) => state.posts.posts.find( post =>
 
 // only userpage renderd when posts,userId CHnages
 // createSelector Accepts 1 or more Input Funs
-export const selectPostsByUser=( state, user ) => createSelector(
-        [ selectAllPosts, ( state, userId ) => userId ], // returned Output To next funtion
-        ( posts, userId ) => posts.filter( post => post.userId===userId )
+
+export const selectPostsByUser=( userId ) => createSelector(
+        [ selectAllPosts ],
+        ( posts ) => posts.filter( post => post.userId===userId )
 );
 export const { incrementCount, reactionAdded }=postsSlice.actions;
 

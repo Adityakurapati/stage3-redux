@@ -5,7 +5,7 @@ import Posts from './features/posts/Posts';
 import SinglePost from './features/posts/SinglePost';
 import EditPostForm from './features/posts/EditPostForm';
 import Layout from './components/Layout';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom'; // Correctly importing Navigate
 import UsersList from './features/users/UsersList';
 import UserPage from './features/users/UserPage';
 
@@ -24,6 +24,7 @@ function App ()
                                         <Route index element={ <UsersList /> } />
                                         <Route path=":userId" element={ <UserPage /> } />
                                 </Route>
+                                {/* Catch other routes, replace the bad request */ }
                                 <Route path="*" element={ <Navigate to="/" replace /> } />
                         </Route>
                 </Routes>
