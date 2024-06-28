@@ -4,7 +4,7 @@ import usersReducer from '../features/users/usersSlice';
 
 const store2=configureStore( {
         reducer: {
-                [ apiSlice.reducerPath ]: apiSlice.reducer
+                [ apiSlice.reducerPath ]: apiSlice.reducer,
                 users: usersReducer,
         },
 } );
