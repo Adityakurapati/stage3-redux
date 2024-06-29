@@ -1,12 +1,10 @@
 import React from 'react'
-import { reactionAdded } from './postsSlice';
-import { useDispatch } from 'react-redux';
-
+import { useAddReactionMutation } from './postsSlice';
 
 const ReactionButtons=( { post } ) =>
 {
 
-        const dispatch=useDispatch();
+        const [ addReaction ]=useAddReactionMutation();
         const reactionEmojis={
                 thumbsUp: "👍", wow: "😲", heart: "💙", rocket: "🚀", coffee: "☕"
         }
@@ -19,7 +17,9 @@ const ReactionButtons=( { post } ) =>
                                 className={ `reactionButton ${ name } bg-slate-600 p-2 rounded-3xl hover:bg-slate-950 hover:text-white` }
                                 onClick={ () =>
                                 {
-                                        dispatch( reactionAdded( { postId: post.id, reaction: name } ) )
+                                        // dispatch( reactionAdded( { postId: post.id, reaction: name } ) )
+                                        const newValue=post.reactions[ name ]+1;
+                                        addReaction( { postId: post.id, reactions: { ...post.reactions, [ name ]: newValue } } )
                                 } }>{ emoji } { post.reactions[ name ] }</button>
                 )
         } );

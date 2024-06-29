@@ -5,10 +5,11 @@ import store2 from './app/store2'; // Ensure this path is correct
 import App from './App';
 import { fetchUsers } from './features/users/usersSlice';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { fetchPosts } from './features/posts/postsSlice';
+import { extendedApiSlice } from './features/posts/postsSlice';
 import './index.css'; // Import the Tailwind CSS file
 // Dispatch the fetchUsers thunk action
-store2.dispatch( fetchUsers() );
+
+store2.dispatch( extentedApiSlice.endpoints.getPosts.initiate() )
 store2.dispatch( fetchPosts() );
 
 const container=document.getElementById( 'root' );

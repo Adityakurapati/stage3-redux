@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { addNewPost } from './postsSlice';
+import { useSelector } from 'react-redux';
+import { useAddPostMutation } from './postsSlice';
 import { selectAllUsers } from '../users/usersSlice';
 import { useNavigate } from 'react-router-dom'
-const AddPostForm=() =>
+const AddPostForm=async () =>
 {
         const [ title, setTitle ]=useState( '' );
         const [ description, setDescription ]=useState( '' ); // Corrected variable name
         const [ userId, setUserId ]=useState( '' );
-        const dispatch=useDispatch();
-        const [ addRequestStatus, setAddRequestStatus ]=useState( 'idle' );
         const navigate=useNavigate();
 
         const onTitleChanged=( e ) => setTitle( e.target.value );
@@ -18,7 +16,9 @@ const AddPostForm=() =>
 
         const users=useSelector( selectAllUsers );
 
-        const canSave=[ title, description, userId ].every( Boolean )&&addRequestStatus==='idle'; // Corrected variable name
+        const canSave=[ title, description, userId ].every( Boolean )&&!isLoading // Corrected variable name
+
+        const [ addPost, { isLoading } ]=useAddPostMutation();
 
         const onSavePost=async () =>
         {
@@ -26,8 +26,7 @@ const AddPostForm=() =>
                 {
                         try
                         {
-                                setAddRequestStatus( 'pending' );
-                                await dispatch( addNewPost( { title, body: description, userId } ) ).unwrap(); // Ensured awaiting
+                                await addPost( { title, body: description, userId } ).unwrap()
                                 setTitle( '' );
                                 setDescription( '' ); // Corrected variable name
                                 setUserId( '' );
@@ -35,9 +34,6 @@ const AddPostForm=() =>
                         } catch ( e )
                         {
                                 console.error( 'Failed to save the post:', e );
-                        } finally
-                        {
-                                setAddRequestStatus( 'idle' );
                         }
                 }
         };

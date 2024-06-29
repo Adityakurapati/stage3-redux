@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from 'react-router-dom';
 
-import { selectPostById, updatePost, deletePost } from './postsSlice';
+import { selectPostById, updatePost, deletePost, useUpdatePostMutation, useDeletePostMutation } from './postsSlice';
 import { selectAllUsers } from "../users/usersSlice";
 
 const EditPost=() =>
@@ -15,11 +15,10 @@ const EditPost=() =>
         const [ title, setTitle ]=useState( '' );
         const [ description, setDescription ]=useState( '' );
         const [ userId, setUserId ]=useState( '' );
-        const [ requestStatus, setRequestStatus ]=useState( 'idle' );
-
-        const dispatch=useDispatch();
         const navigate=useNavigate();
 
+        const [ updatePost, { isLoading } ]=useUpdatePostMutation();
+        const [ deletePost ]=useDeletePostMutation();
         useEffect( () =>
         {
                 if ( post )
@@ -43,16 +42,14 @@ const EditPost=() =>
         const onDescriptionChanged=( e ) => setDescription( e.target.value );
         const onAuthorChanged=( e ) => setUserId( Number( e.target.value ) );
 
-        const canSave=[ title, description, userId ].every( Boolean )&&requestStatus==="idle";
-
+        const canSave=[ title, description, userId ].every( Boolean )&&!isLoading
         const onSavePost=async () =>
         {
                 if ( canSave )
                 {
                         try
                         {
-                                setRequestStatus( "pending" );
-                                await dispatch( updatePost( { id: post.id, title, body: description, userId, reactions: post.reactions } ) ).unwrap();
+                                await updatePost( { id: post.id, title, body: description, userId } ).unwrap()
                                 setTitle( '' );
                                 setDescription( '' );
                                 setUserId( '' );
@@ -60,9 +57,6 @@ const EditPost=() =>
                         } catch ( e )
                         {
                                 console.error( 'Failed to save the post:', e );
-                        } finally
-                        {
-                                setRequestStatus( "idle" );
                         }
                 }
         };
@@ -76,27 +70,12 @@ const EditPost=() =>
         {
                 try
                 {
-                        setRequestStatus( 'pending' );
-                        console.log( 'Deleting post:', post.id );
-                        dispatch( deletePost( { id: post.id } ) ).unwrap()
-                                .then( () =>
-                                {
-                                        console.log( 'Post deleted successfully' );
-                                        setTitle( '' );
-                                        setDescription( '' );
-                                        setUserId( '' );
-                                        navigate( '/' );
-                                } )
-                                .catch( ( err ) =>
-                                {
-                                        console.error( 'Error deleting post:', err );
-                                } );
+                        await deletePost( {
+                                id: post.id
+                        } )
                 } catch ( err )
                 {
                         console.error( 'Error in onDeletePost:', err );
-                } finally
-                {
-                        setRequestStatus( 'idle' );
                 }
         }
 
